@@ -14,15 +14,15 @@ const userRoute = async (app: FastifyInstance) => {
 
     const {name, password, user} =  requestBodyUser.parse(request.body);
 
-    const sessionId = randomUUID();  
+    const id = randomUUID();  
 
-    reply.cookie('sessioId', sessionId, {
+    reply.cookie('userId', id, {
       path: '/',
       maxAge: 1000 * 60 * 60 * 24 * 7 //7days
     })
 
     await knex('users').insert({
-      id: randomUUID(),
+      id: id,
       name,
       user,
       password
