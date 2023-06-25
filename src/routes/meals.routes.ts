@@ -44,7 +44,6 @@ const mealsRoute = async (app: FastifyInstance) => {
   });
 
   app.put('/:id', {preHandler: [checkUserId]}, async(request: FastifyRequest, reply:FastifyReply) => {
-    console.log('sdsad');
     
     const {userId} = request.cookies
 
@@ -72,12 +71,12 @@ const mealsRoute = async (app: FastifyInstance) => {
       throw new Error("Não é permitido adicionar uma refeição com data maior que o dia de hoje.");      
     }
 
-    const getMealById = await knex('meals').where({
+    const alreadyExistsThisMeal = await knex('meals').where({
       id: id,
       user_id: userId
     }).select().first();
 
-    if(!getMealById){
+    if(!alreadyExistsThisMeal){
       throw new Error("Não é possível alterar esta refeição, ela não existe!");
       
     }
@@ -98,6 +97,21 @@ const mealsRoute = async (app: FastifyInstance) => {
   });
 
   app.delete('/:id', {preHandler: [checkUserId]}, async(request: FastifyRequest, reply: FastifyReply) => {
+    const {userId} = request.cookies;
+
+    const requestParams = z.object({
+      id: z.string().uuid(),
+    })
+
+    const {id} = requestParams.parse(request.params)
+
+    const alreadyExistsThisMeal = await knex('meals').where({id,  user_id: userId}).select().first();
+
+    if(!alreadyExistsThisMeal){
+      throw new Error("Não é possível excluir esta refeição, ela não existe!");
+    }
+
+    await knex('meals').where({id,  user_id: userId}).del()
 
   });
 }
