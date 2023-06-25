@@ -2,33 +2,41 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {z} from 'zod';
 import {knex} from '../database';
 import { randomUUID } from "node:crypto";
+import { checkUserId } from "../middlewares/check-id-user-exists";
+import { compareAsc } from "date-fns";
 
 const mealsRoute = async (app: FastifyInstance) => {
-  app.post('/', async(request: FastifyRequest, reply:FastifyReply) => {
+  app.post('/', {preHandler: [checkUserId]}, async(request: FastifyRequest, reply:FastifyReply) => {
     
+    const {userId} = request.cookies
+
     const requestBodyMeal = z.object({
       name: z.string().nonempty(),
       description: z.string().nonempty(),
-      date: z.string().transform(str => new Date(str)),
+      date: z.string().transform(str => new Date(str).toISOString()),
       hour: z.string().refine((value) => /^(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?$/.test(value), 'O formato precisa ser de horas ex: 14:00'),
       isInDiet: z.coerce.boolean()
     });  
+    
 
     const {name, description, date, hour, isInDiet} = requestBodyMeal.parse(request.body);
-
     const inDiet = isInDiet === true ? 1 : 0
 
-    //get cookies id user 
-    //do middleware check-user-id
+    const dateMeal = new Date(date); 
+    const dateNow = new Date()
 
-    await knex.insert({
+    if(compareAsc(dateMeal, dateNow) == 1){
+      throw new Error("Não é permitido adicionar uma refeição com data maior que o dia de hoje.");      
+    }
+
+    await knex('meals').insert({
       id: randomUUID(),
-      user_id: /*  */,
+      user_id: userId,
       name,
       description,
       date,
       hour,
-      inDiet
+      is_in_diet: inDiet
     })
 
 

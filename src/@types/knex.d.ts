@@ -8,7 +8,6 @@ declare module 'knex/types/tables' {
       user: string,
       password: string,
       created_at: string,
-      session_id?: string
     }
   }
 
@@ -20,9 +19,8 @@ declare module 'knex/types/tables' {
       description: string,
       date: string,
       hour: string,
-      isInDiet: number,
+      is_in_diet: number,
       created_at: string,
-      session_id?: string
     }
   }  
 }
