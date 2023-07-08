@@ -114,6 +114,30 @@ const mealsRoute = async (app: FastifyInstance) => {
     await knex('meals').where({id,  user_id: userId}).del()
 
   });
+
+  app.get('/usermeals', {preHandler: checkUserId}, async(request: FastifyRequest, reply: FastifyReply) => {
+    const {userId} = request.cookies
+
+    const meals = await knex('meals').where({user_id: userId})
+
+    return meals
+  })
+
+  app.get('/meal/:id', {preHandler: checkUserId}, async(request: FastifyRequest, reply: FastifyReply) => {
+    const {userId} = request.cookies
+
+    const requestParams = z.object({
+      id: z.string().uuid(),
+    })
+
+    const {id} = requestParams.parse(request.params);
+
+
+    const meal = await knex('meals').where({id,  user_id: userId}).first()
+
+    return meal
+
+  })
 }
 
 export {mealsRoute}
